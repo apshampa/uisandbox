@@ -162,7 +162,12 @@
             cursor: move; flex-shrink: 0;
         }
         .window-controls { display: flex; gap: 8px; }
-        .control-btn { width: 12px; height: 12px; border-radius: 50%; }
+        .control-btn { 
+            width: 12px; 
+            height: 12px; 
+            border-radius: 50%; 
+            cursor: pointer; /* Add pointer cursor to all buttons */
+        }
         .control-btn.close { background: #ff5f57; }
         .control-btn.minimize { background: #ffbd2e; }
         .control-btn.maximize { background: #28c940; }
@@ -508,7 +513,11 @@
                 windowEl.style.zIndex = ++highestZIndex;
                 windowEl.innerHTML = `
                     <div class="window-header">
-                        <div class="window-controls"><span class="control-btn close"></span><span class="control-btn minimize"></span><span class="control-btn maximize"></span></div>
+                        <div class="window-controls">
+                            <span class="control-btn close"></span>
+                            <span class="control-btn minimize"></span>
+                            <span class="control-btn maximize"></span>
+                        </div>
                         <div class="window-title">${title}</div>
                     </div>
                     <div class="window-body">
@@ -520,12 +529,21 @@
                 windowEl.classList.add('opening');
 
                 windowEl.addEventListener('mousedown', () => { windowEl.style.zIndex = ++highestZIndex; });
+                
+                // Close button functionality
                 windowEl.querySelector('.control-btn.close').addEventListener('click', (e) => {
                     e.stopPropagation();
                     windowEl.style.transformOrigin = `${iconRect.left + iconRect.width / 2}px ${iconRect.top + iconRect.height / 2}px`;
                     windowEl.classList.add('closing');
                     windowEl.addEventListener('animationend', () => windowEl.remove(), { once: true });
                 });
+
+                // Maximize button functionality: open URL in new tab
+                windowEl.querySelector('.control-btn.maximize').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.open(url, '_blank');
+                });
+
                 makeDraggable(windowEl);
             }, 100); // 100ms delay
         }
@@ -534,6 +552,10 @@
             const header = element.querySelector('.window-header');
             let isDragging = false, offsetX, offsetY;
             header.addEventListener('mousedown', (e) => {
+                // Prevent dragging when clicking on control buttons
+                if (e.target.classList.contains('control-btn')) {
+                    return;
+                }
                 isDragging = true;
                 offsetX = e.clientX - element.offsetLeft;
                 offsetY = e.clientY - element.offsetTop;
@@ -544,7 +566,10 @@
                 element.style.left = `${e.clientX - offsetX}px`;
                 element.style.top = `${e.clientY - offsetY}px`;
             });
-            document.addEventListener('mouseup', () => { isDragging = false; header.style.cursor = 'move'; });
+            document.addEventListener('mouseup', () => { 
+                isDragging = false; 
+                header.style.cursor = 'move'; 
+            });
         }
 
         // --- Draggable Icon Logic ---
